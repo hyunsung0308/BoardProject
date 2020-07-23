@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	<mapper namespace="org.zerock.mapper.BoardMapper">
+	
+	
+<!-- XML을 작성할 때는 받드시 <mapper>의 namespace 속성값을 Mapper 인터페이스와 동일한 이름을 주는것을 주의
+	
+<select> 태그의 id 속성값은 메서드의 이름과 일치 하게 작성합니다. 
+
+resultType의 속성갑은 select 쿼리의 결과를 특정 클래스의 객체로 만들기 위해서 설정합니다.
+
+CDATA는 XML에서 부등호를 사용하기 위해서 사용합니다.	
+	
+	
+-->
+	
+	<select id="getList" resultType="org.zerock.domain.BoardVO">
+	<![CDATA[
+		select * from tb1_board where bno > 0
+	]]>
+	</select>
+	
+	
+	<!-- 목록과 데이터 개수 처리
+	동적 SQL을 이용해서 검색 조건을 처리하는 부분은 해당 데이터의 개수를 처리하는 부분에서도
+	동일하게 적용되어야만 합니다. 이 경우 가장 간단한 방법은 동적 SQL을 처리하는 부분을 그대로 복사해서
+	넣어줄수 있지만, 만일 동적 SQL을 수정하는 경우에는 매번 목록을 가져오는 SQL과 데이터 개수를 처리하는
+	SQL 쪽을 같이 수정해야 합니다.
+	
+	 -->
+	
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item="type" collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+						 title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+						 title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+						 title like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+	
+	
+	<!-- 검색조건이 3가지 이므로 총 6가지의 조합이 가능하지만, 각 문자열을 이용해서 검색 조건을 결합하는
+	형태로 하면 3개의 동작 SQL 구문만으로도 처리를 할 수 있습니다. -->
+	<select id="getListWithPaging" resultType="org.zerock.domain.BoardVO">
+	<![CDATA[
+	select 
+		bno, title, content, writer, regdate, updatedate, replycnt	
+	from
+		(
+		select /*+INDEX_DESC(tb1_board pk_board) */
+			rownum rn , bno ,title , content, writer, regdate, updatedate, replycnt
+		from 
+			tb1_board
+		where 
+	]]>
+		
+		<include refid="criteria"></include>
+	
+	<![CDATA[
+		rownum <= #{pageNum} * #{amount}
+		)
+	where rn > (#{pageNum} -1) * #{amount}
+	]]>
+	</select>
+	
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from tb1_board 
+		where 
+		
+		<include refid="criteria"></include>
+		
+		bno > 0
+	</select>
+	
+	
+	<!-- insert()는 시퀀스 다음 값을 구해서 insert할 때 사용
+	
+	insert문은 몇 건의 데이터가 변경되었는지만 알려주기 떄문에 추가된 데이터의 PK값을 알수 X
+	
+	 -->
+	 
+	
+	<insert id="insert">
+		insert into tb1_board (bno,title,content,writer)
+		values (seq_board.nextval, #{title}, #{content}, #{writer})
+	</insert>
+	
+	
+	<!-- insertSelectKey()는 @SelectKey라는 MyBatis의 어노테이션을 이용 
+	
+	@SelectKey는 주로 PK값을 미리 SQL을 통해서 처리해 두고 특정한 이름으로 결과를 보관하는 방식입니다.
+	 
+	-->
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="bno" order="BEFORE" resultType="long">
+		
+		select seq_board.nextval from dual
+		
+		</selectKey>
+		
+		insert into tb1_board (bno, title , content ,writer)
+		values (#{bno}, #{title}, #{content}, #{writer})
+	</insert>
+
+	<select id="read" resultType="org.zerock.domain.BoardVO">
+		select * from tb1_board where bno = #{bno}
+	</select>
+	
+	<delete id="delete"> 
+		delete from tb1_board where bno = #{bno}
+	</delete>
+	
+	<update id="update">
+		update tbl_board
+		set title= #{title},
+		content= #{content},
+		writer= #{writer},
+		updatedate= sysdate
+		where bno= #{bno}
+	</update>
+	
+	<update id="updateReplyCnt">
+		update tb1_board set replycnt = replycnt + #{amount} where bno = #{bno}
+	</update>
+
+	</mapper>

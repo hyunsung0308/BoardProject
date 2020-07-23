@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+		
+		<context:annotation-config></context:annotation-config>
+		
+		<context:component-scan base-package="org.zerock.service"></context:component-scan>
+		
+		<context:component-scan base-package="org.zerock.aop"></context:component-scan>
+		
+		
+		<!-- root-context.xml에서는 <component-scan>을 이용해서 'org.zerock.service'패키지와 'org.zerock.aop' 패키지를 스캔합니다. 이 과정
+		에서 SampleServiceImpl 클래스와 LogAdvice는 스프링의 빈(객체)으로 등록될 것이고, <aop:aspectj-autoproxy>를 이용해서 LogAdvice에 설정한 @Before 가 동작하게 됩니다. -->
+		
+		<aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+		
+</beans>
