@@ -1,2 +1,2 @@
-Spring xml 방식의 게시판
+# Spring xml 방식의 게시판
 
